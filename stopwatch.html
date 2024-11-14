@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Stopwatch</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f5f5f5;
+        }
+
+        .stopwatch {
+            text-align: center;
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        #timeDisplay {
+            font-size: 48px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        #progressBarContainer {
+            height: 20px;
+            background-color: #ddd;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+
+        #progressBar {
+            height: 100%;
+            background-color: #4CAF50;
+            width: 0;
+            border-radius: 5px;
+        }
+
+        .buttons button {
+            padding: 10px 20px;
+            margin: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        #lapTimes {
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        #lapList {
+            list-style: none;
+            padding: 0;
+        }
+
+        #lapList li {
+            font-size: 16px;
+            padding: 5px 0;
+        }
+
+        .countdown {
+            margin-top: 40px;
+        }
+
+        #countdownDisplay {
+            font-size: 32px;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="stopwatch">
+        <div id="timeDisplay">00:00:00</div>
+        <div id="progressBarContainer">
+            <div id="progressBar"></div>
+        </div>
+        
+        <div class="buttons">
+            <button id="startStop" onclick="startStop()">Start</button>
+            <button id="reset" onclick="reset()">Reset</button>
+            <button id="lap" onclick="recordLap()">Lap</button>
+        </div>
+        
+        <div id="lapTimes">
+            <h3>Lap Times:</h3>
+            <ul id="lapList"></ul>
+        </div>
+        
+        <div class="countdown">
+            <h3>Countdown Timer</h3>
+            <input type="number" id="countdownInput" placeholder="Set countdown (sec)" min="1">
+            <button id="startCountdown" onclick="startCountdown()">Start Countdown</button>
+            <button id="resetCountdown" onclick="resetCountdown()">Reset Countdown</button>
+            <div id="countdownDisplay">00:00</div>
+        </div>
+    </div>
+
+    <script>
+        let timer;
+        let isRunning = false;
+        let elapsedTime = 0;  // in seconds
+        let lapTimes = [];
+        let countdownTimer;
+        let countdownTime = 0; // for countdown timer in seconds
+
+        const timeDisplay = document.getElementById('timeDisplay');
+        const startStopButton = document.getElementById('startStop');
+        const lapList = document.getElementById('lapList');
+        const progressBar = document.getElementById('progressBar');
+        const countdownDisplay = document.getElementById('countdownDisplay');
+        const countdownInput = document.getElementById('countdownInput');
+        const startCountdownButton = document.getElementById('startCountdown');
+        const resetCountdownButton = document.getElementById('resetCountdown');
+
+        // Format time as HH:MM:SS
+        function formatTime(seconds) {
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }
+
+        // Update stopwatch time display and progress bar
+        function updateTime() {
+            elapsedTime++;
+            timeDisplay.textContent = formatTime(elapsedTime);
+            const progress = (elapsedTime % 60) / 60 * 100;  // Progress bar for each minute
+            progressBar.style.width = `${progress}%`;
+        }
+
+        // Start/Stop the stopwatch
+        function startStop() {
+            if (isRunning) {
+                clearInterval(timer);
+                startStopButton.textContent = "Start";
+            } else {
+                timer = setInterval(updateTime, 1000);
+                startStopButton.textContent = "Stop";
+            }
+            isRunning = !isRunning;
+        }
+
+        // Reset the stopwatch
+        function reset() {
+            clearInterval(timer);
+            isRunning = false;
+            elapsedTime = 0;
+            lapTimes = [];
+            timeDisplay.textContent = formatTime(elapsedTime);
+            lapList.innerHTML = '';
+            progressBar.style.width = '0%';
+            startStopButton.textContent = "Start";
+        }
+
+        // Record a lap time
+        function recordLap() {
+            if (isRunning) {
+                lapTimes.push(elapsedTime);
+                const lapItem = document.createElement('li');
+                lapItem.textContent = `Lap ${lapTimes.length}: ${formatTime(elapsedTime)}`;
+                lapList.appendChild(lapItem);
+            }
+        }
+
+        // Start Countdown Timer
+        function startCountdown() {
+            const countdownInputValue = parseInt(countdownInput.value);
+            if (isNaN(countdownInputValue) || countdownInputValue <= 0) {
+                alert("Please enter a valid number for the countdown.");
+                return;
+            }
+            countdownTime = countdownInputValue;
+            countdownDisplay.textContent = formatTime(countdownTime);
+            countdownTimer = setInterval(updateCountdown, 1000);
+            startCountdownButton.disabled = true;
+            resetCountdownButton.disabled = false;
+        }
+
+        // Update Countdown Timer
+        function updateCountdown() {
+            countdownTime--;
+            countdownDisplay.textContent = formatTime(countdownTime);
+
+            if (countdownTime <= 0) {
+                clearInterval(countdownTimer);
+                alert("Countdown complete!");
+                startCountdownButton.disabled = false;
+                resetCountdownButton.disabled = true;
+            }
+        }
+
+        // Reset Countdown Timer
+        function resetCountdown() {
+            clearInterval(countdownTimer);
+            countdownDisplay.textContent = "00:00";
+            startCountdownButton.disabled = false;
+            resetCountdownButton.disabled = true;
+        }
+    </script>
+</body>
+</html>
